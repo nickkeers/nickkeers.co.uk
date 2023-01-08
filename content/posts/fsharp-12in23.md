@@ -71,4 +71,52 @@ let allergicTo (codedAllergies: int) (allergen: Allergen) =
     codedAllergies &&& allergyValue allergen <> 0 
 ```
 
-This wasn't too bad, from first look I saw that it was basically a reducer problem, I implemented that using a recursive function `listAcc`, I could have massaged that into an actual reducer but it was a bit easier for me to understand when written this way.
+This wasn't too bad, from first look I saw that it was basically a reducer problem, I implemented that using a recursive function `listAcc`, I could have massaged that into an actual reducer but it was a bit easier for me to understand when written this way. Looking back I realise now that the `allergicTo` function could help you to write the `list` function - Looking at community solutions I picked up some useful tips on adding the values to the union directly which I tried first, but didn't use, e.g.:
+
+```fsharp
+[<Flags>]
+type Allergen =
+    | Eggs         = 1
+    | Peanuts      = 2
+    | Shellfish    = 4
+    | Strawberries = 8
+    | Tomatoes     = 16
+    | Chocolate    = 32
+    | Pollen       = 64
+    | Cats         = 128
+```
+
+The `Flags` attribute lets you treat the union as a bit field, very useful! And then you can grab the values using `Enum.GetValues typeof<Allergen>` which is good to know!
+
+## Bird watcher
+
+I picked this one by accident not realising it was an easy one, no commentary, but it was a nice refresher on arrays I guess?
+
+```fsharp
+module BirdWatcher
+
+let lastWeek: int[] =
+   [| 0; 2; 5; 3; 7; 8; 4 |]
+
+let yesterday(counts: int[]): int =
+  counts.[counts.Length - 2]
+
+let total(counts: int[]): int =
+  Array.sum counts
+
+let dayWithoutBirds(counts: int[]): bool =
+  Array.exists (fun b -> b = 0) counts
+
+let incrementTodaysCount(counts: int[]): int[] =
+  match counts with
+  | [| a; b; c; d; e; f; g; |] -> [| a; b; c; d; e; f; g + 1 |]
+  | _ -> Array.singleton 0
+
+let oddWeek(counts: int[]): bool =
+  match counts with
+  | [| _; 0; _; 0; _; 0; _; |] -> true
+  | [| _; 10; _; 10; _; 10; _; |] -> true
+  | [| 5; _; 5; _; 5; _; 5;  |] -> true
+  | _ -> false 
+```
+
