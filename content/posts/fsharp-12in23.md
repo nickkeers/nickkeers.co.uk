@@ -123,3 +123,64 @@ let oddWeek(counts: int[]): bool =
 Looking closer, I can see it was marked as a "learning exercise", woops, missing those from now on then.
 
 ## Phone numbers
+
+This one was fun! It took me a while to get used to using active patterns, the magic being that I had to declare the N and X patterns separately to reap the full benefits, I wasn't getting a proper match when I defined them as one pattern. The validation of the actual number is a bit messy, I probably could have written it recursively and for 11 digits numbers strip off the 1 at the front if its valid and use the validation rules for 10 digit numbers.
+
+I saw a couple of solutions from the exercism community using `Result.Bind` which was very clean, using the Monad properties of the Result type, that would have made it easier to chain together the input validation for punctuation and letters - I saw those tests lasts and had to shoehorn the checks in.
+
+```fsharp
+module PhoneNumber
+
+open System
+
+(*
+Numbers are in the form:
+(NXX)-NXX-XXXX
+
+Where N = 2 - 9
+X = 0 - 9
+*)
+
+let (|N|_|) (i: int) = if i >= 2 && i <= 9 then Some N else None
+let (| X | _ |) (i: int) = if i >= 0 && i <= 9 then Some X else None 
+
+let arrayInts (input: int list) =
+    input
+    |> (List.map (sprintf "%i") >> String.concat "")
+    |> UInt64.Parse
+
+let validateInts inputIntsList =
+    let inputInts =
+        inputIntsList
+        |> List.filter (Char.IsNumber)
+        |> List.map (Int32.Parse << Char.ToString)
+    
+    match inputInts with
+    | [ N; X; X; N; X; X; X; X; X; X; ] -> Ok (arrayInts inputInts)
+    | [ 1; N; X; X; N; X; X; X; X; X; X; ] -> Ok (arrayInts inputInts[1..])
+    | [ 0; X; X; N; X; X; X; X; X; X; ] -> Error "area code cannot start with zero"
+    | [ 1; 0; X; X; N; X; X; X; X; X; X; ] -> Error "area code cannot start with zero"
+    | [ 1; X; X; N; X; X; X; X; X; X; ] -> Error "area code cannot start with one"
+    | [ 1; 1; X; X; N; X; X; X; X; X; X; ] -> Error "area code cannot start with one"
+    | [ N; X; X; 1; X; X; X; X; X; X; ] -> Error "exchange code cannot start with one"
+    | [ N; X; X; 0; X; X; X; X; X; X; ] -> Error "exchange code cannot start with zero"
+    | [ 1; N; X; X; 1; X; X; X; X; X; X; ] -> Error "exchange code cannot start with one"
+    | [ 1; N; X; X; 0; X; X; X; X; X; X; ] -> Error "exchange code cannot start with zero"
+    | [ _; N; X; X; N; X; X; X; X; X; X; ] -> Error "11 digits must start with 1"
+    | x when x.Length < 10 -> Error "incorrect number of digits"
+    | x when x.Length > 11 -> Error "more than 11 digits"
+    | _ -> Error "not recognised"
+
+let clean (input: string): Result<uint64, string> =
+    let inputIntsList =
+        input
+        |> Seq.toList
+    
+    let isBadPunctuation x =
+        Char.IsPunctuation(x) && not (Seq.contains x ['(';  ')'; '-'; '.'])
+    
+    match inputIntsList with
+    | x when (Seq.exists Char.IsLetter x) -> Error "letters not permitted"
+    | x when (Seq.exists isBadPunctuation x) -> Error "punctuations not permitted"
+    | _ -> validateInts inputIntsList 
+```
