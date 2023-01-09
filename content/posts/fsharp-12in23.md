@@ -90,7 +90,7 @@ The `Flags` attribute lets you treat the union as a bit field, very useful! And 
 
 ## Bird watcher
 
-I picked this one by accident not realising it was an easy one, no commentary, but it was a nice refresher on arrays I guess?
+I picked this one by accident not realising it was an easy one, no commentary, but it was a nice refresher on arrays I guess? 
 
 ```fsharp
 module BirdWatcher
@@ -120,3 +120,6 @@ let oddWeek(counts: int[]): bool =
   | _ -> false 
 ```
 
+Looking closer, I can see it was marked as a "learning exercise", woops, missing those from now on then.
+
+## Phone numbers

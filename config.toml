@@ -91,7 +91,7 @@ rss = true
 weight = 56
 icon = "fab fa-mastodon"
 format = "https://mastodon.social/%v"
-id = "nickkeers"
+id = "@nickkeers"
 url = ""
 
 [[params.friends]]
