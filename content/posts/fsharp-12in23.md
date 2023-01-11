@@ -184,3 +184,57 @@ let clean (input: string): Result<uint64, string> =
     | x when (Seq.exists isBadPunctuation x) -> Error "punctuations not permitted"
     | _ -> validateInts inputIntsList 
 ```
+
+## Bank accounts 
+
+This was a fun one to write, I learnt about `AsyncReplyChannel` here, I submitted one solution first with the agent code broken out and then simplified the function to pass the balance as a parameter to the internal `loop` function which made things a lot easier to read. 
+
+One other handy tip was combining the request and response types, originally I had them separate and it didn't occur to me that I could specify that only `GetBalance` needed a reply channel - very handy!
+
+```fsharp
+module BankAccount
+
+type BankMessage =
+    | OpenAccount
+    | CloseAccount
+    | GetBalance of AsyncReplyChannel<decimal option>
+    | UpdateBalance of decimal
+
+type BankAccount = MailboxProcessor<BankMessage>
+
+let agent (account: BankAccount) =
+    let rec loop (balance: decimal option)  = async {
+        let! message = account.Receive()
+        
+        match message with
+        | OpenAccount ->
+            return! loop (Some 0.0m)
+        | CloseAccount ->
+            return! loop (None)
+        | GetBalance replyChannel ->
+            replyChannel.Reply balance
+            return! loop balance
+        | UpdateBalance amt ->
+            return! loop (balance |> Option.map((+) amt))
+      
+    }
+    
+    loop
+
+let mkBankAccount(): BankAccount = MailboxProcessor.Start(fun account -> agent account None)
+
+let openAccount (account: BankAccount) =
+    account.Post OpenAccount
+    account 
+
+let closeAccount (account: BankAccount) =
+    account.Post CloseAccount
+    account
+
+let getBalance (account: BankAccount) =
+    account.PostAndReply GetBalance
+
+let updateBalance (change: decimal) (account: BankAccount) =
+    account.Post (UpdateBalance change)
+    account
+```
